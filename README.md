@@ -4,6 +4,10 @@ A lightweight, production-minded Python toolkit for building reliable metadata-d
 
 The project packages reusable patterns commonly needed in batch and near-real-time data platforms: configuration-driven ingestion, schema validation, data-quality checks, incremental processing, partition management, retries, and optional PySpark helpers.
 
+## CI
+
+The repository runs automated tests and Ruff lint checks across Python 3.10, 3.11, and 3.12.
+
 ## What it provides
 
 - **Metadata-driven configuration** with YAML.
