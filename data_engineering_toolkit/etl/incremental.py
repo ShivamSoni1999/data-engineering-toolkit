@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
+
 
 @dataclass
 class Watermark:
@@ -21,4 +22,4 @@ class Watermark:
 
     @staticmethod
     def now() -> datetime:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
