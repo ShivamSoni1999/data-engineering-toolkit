@@ -2,36 +2,112 @@
 
 A lightweight, production-minded Python toolkit for building reliable metadata-driven data pipelines.
 
-The project focuses on reusable patterns commonly needed in batch and near-real-time data platforms: configuration-driven ingestion, schema validation, data-quality checks, incremental processing, partition management, retries, and PySpark helpers.
-
-> This is an open-source engineering project designed for practical reuse and experimentation.
+The project packages reusable patterns commonly needed in batch and near-real-time data platforms: configuration-driven ingestion, schema validation, data-quality checks, incremental processing, partition management, retries, and optional PySpark helpers.
 
 ## What it provides
 
-- **Metadata-driven pipelines** using YAML configuration.
-- **Schema validation** with clear type/missing-column errors.
-- **Data-quality checks** for nulls and uniqueness, with an extensible quality-report model.
-- **Incremental ingestion** using a watermark/checkpoint abstraction.
+- **Metadata-driven configuration** with YAML.
+- **Schema validation** for required columns and basic Python types.
+- **Data-quality checks** for nulls and uniqueness with structured reports.
+- **Incremental processing** through an explicit watermark abstraction.
+- **Partition helpers** for Hive-style date partitions.
 - **Retry utilities** with bounded exponential backoff.
-- **Partition helpers** for date-based data layouts.
-- **PySpark utilities** that keep Spark-specific logic isolated.
-- **Unit tests** and GitHub Actions CI.
+- **Optional PySpark support** without making Spark a core dependency.
+- **Tests + GitHub Actions CI** for repeatable validation.
 
-## Architecture
+## End-to-end flow
+
+The toolkit is designed around a simple pipeline lifecycle:
+
+```mermaid
+flowchart LR
+    A[Source Data] --> B[Pipeline Config]
+    B --> C[Ingestion]
+    C --> D[Schema Validation]
+    D --> E[Incremental Filter]
+    E --> F[Transform]
+    F --> G[Data Quality Checks]
+    G --> H[Partitioning]
+    H --> I[Target Storage]
+
+    B -. optional .-> J[PySpark Helpers]
+    J -. compute .-> F
+
+    G --> K{Quality Gate}
+    K -->|Pass| H
+    K -->|Fail| L[Reject / Investigate]
+```
+
+### Component view
 
 ```text
-Source
-  |
-  v
-Metadata / Config --> Validation --> Ingestion --> Transform
-                                      |              |
-                                      v              v
-                                  Checkpoint      Quality Checks
-                                      |              |
-                                      +-------> Storage
-                                                     |
-                                                     v
-                                               Monitoring / Logs
+                    +----------------------+
+                    |   YAML Metadata      |
+                    | pipeline + quality   |
+                    +----------+-----------+
+                               |
+                               v
++-------------+      +---------+----------+
+| Source Data | ---> |     Ingestion      |
++-------------+      +---------+----------+
+                               |
+                               v
+                    +----------+-----------+
+                    | Schema Validation    |
+                    +----------+-----------+
+                               |
+                               v
+                    +----------+-----------+
+                    | Incremental Filter   |
+                    |    (watermark)      |
+                    +----------+-----------+
+                               |
+                               v
+                    +----------+-----------+
+                    |     Transform        |
+                    |  Python / PySpark    |
+                    +----------+-----------+
+                               |
+                               v
+                    +----------+-----------+
+                    | Data Quality Checks  |
+                    | null + uniqueness    |
+                    +----------+-----------+
+                               |
+                    +----------+-----------+
+                    |    Quality Gate      |
+                    +-----+-----------+---+
+                          |           |
+                       pass         fail
+                          |           |
+                          v           v
+                  +-------+----+   Reject/
+                  | Partition  |   Investigate
+                  | path helper|
+                  +-------+----+
+                          |
+                          v
+                  +-------+------+
+                  | Target Store |
+                  +--------------+
+```
+
+## Repository structure
+
+```text
+data-engineering-toolkit/
+├── data_engineering_toolkit/
+│   ├── config/           # YAML configuration loading
+│   ├── etl/              # Incremental + partitioning helpers
+│   ├── quality/          # Schema + data-quality checks
+│   ├── spark/            # Optional PySpark helpers
+│   └── utils/            # Shared utilities such as retry
+├── examples/             # Runnable configuration + example pipeline
+├── tests/                # Unit tests
+├── .github/workflows/    # CI
+├── pyproject.toml
+├── LICENSE
+└── README.md
 ```
 
 ## Quick start
@@ -47,6 +123,14 @@ Run the example:
 
 ```bash
 python examples/run_pipeline.py
+```
+
+Expected output:
+
+```text
+pipeline=orders_daily
+schema_passed=True
+quality_passed=True
 ```
 
 ## Configuration example
