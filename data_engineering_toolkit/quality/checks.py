@@ -1,5 +1,7 @@
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping
+from typing import Any
+
 
 @dataclass
 class QualityReport:
@@ -7,10 +9,18 @@ class QualityReport:
     checks: dict[str, bool] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
 
-def check_not_null(rows: Iterable[Mapping[str, Any]], columns: list[str]) -> tuple[bool, list[str]]:
+
+def check_not_null(
+    rows: Iterable[Mapping[str, Any]], columns: list[str]
+) -> tuple[bool, list[str]]:
     rows = list(rows)
-    errors = [f"null values found in {column}" for column in columns if any(row.get(column) is None for row in rows)]
+    errors = [
+        f"null values found in {column}"
+        for column in columns
+        if any(row.get(column) is None for row in rows)
+    ]
     return not errors, errors
+
 
 def check_unique(rows: Iterable[Mapping[str, Any]], columns: list[str]) -> tuple[bool, list[str]]:
     rows = list(rows)
@@ -24,6 +34,7 @@ def check_unique(rows: Iterable[Mapping[str, Any]], columns: list[str]) -> tuple
                 break
             seen.add(value)
     return not errors, errors
+
 
 def run_quality_suite(rows: Iterable[Mapping[str, Any]], config: dict[str, Any]) -> QualityReport:
     rows = list(rows)
