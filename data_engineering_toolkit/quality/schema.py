@@ -1,6 +1,8 @@
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 TYPE_MAP = {"string": str, "int": int, "float": (int, float), "bool": bool}
+
 
 def validate_schema(rows: list[Mapping[str, Any]], schema: dict[str, str]) -> list[str]:
     """Validate required columns and basic Python types."""
@@ -18,6 +20,9 @@ def validate_schema(rows: list[Mapping[str, Any]], schema: dict[str, str]) -> li
         for index, row in enumerate(rows):
             value = row.get(column)
             if value is not None and not isinstance(value, expected):
-                errors.append(f"invalid type for '{column}' at row {index}: expected {expected_type}, got {type(value).__name__}")
+                errors.append(
+                    f"invalid type for '{column}' at row {index}: "
+                    f"expected {expected_type}, got {type(value).__name__}"
+                )
                 break
     return errors
