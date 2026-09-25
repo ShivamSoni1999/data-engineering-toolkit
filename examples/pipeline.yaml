@@ -1,0 +1,14 @@
+pipeline:
+  name: orders_daily
+  source: s3://example/raw/orders/
+  target: s3://example/curated/orders/
+  watermark_column: updated_at
+  partition_columns:
+    - event_date
+
+quality:
+  not_null:
+    - order_id
+    - updated_at
+  unique:
+    - order_id
